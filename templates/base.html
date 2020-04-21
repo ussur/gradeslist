@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+    
+{% block head %}
+    {% if title %}
+        <title>{{title}} - Оценки ФКН</title>
+    {% else %}
+        <title>Оценки ФКН</title>
+    {% endif %}
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="{{ url_for('index') }}">Оценки ФКН</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#gradeslistNav" aria-controls="gradeslistNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="gradeslistNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('index') }}">Главная</a>
+                </li>
+                {% if current_user %}
+                    {% if current_user.is_admin() %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('students') }}">Студенты</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('subjects') }}">Предметы</a>
+                    </li>
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                {% if current_user and current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="collapse" href="#help" aria-expanded="false" aria-controls="help">Помощь  <i class="far fa-question-circle"></i></a>
+                    </li>
+                {% endif %}
+                <li class="nav-item">
+                    {% if not current_user %}
+                        <a class="nav-link" href="{{ url_for('login') }}">Вход</a>
+                    {% else %}
+                        <a class="nav-link " href="{{ url_for('logout') }}">Выход</a>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+    </nav>
+{% endblock %}
+  
+{% block body %}  
+    <div class="base-template">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-danger" role="alert">
+                    {% for message in messages %}{{ message }}{% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% if current_user %}
+            <div class="collapse help" id="help">
+                <div class="card border-dark" style="width: 30rem;">
+                    <div class="card-header">Помощь в работе с таблицами</div>
+                    <div class="scroll">
+                        {% if current_user.is_student() %}
+                            <div class="card-body text-dark">
+                                <h5 class="card-title"><b>Нужна помощь?</b></h5>
+                                <p class="card-text">При возникновении проблем во время посещения сайта, вы можете обратиться к администратору по email: <i>admin@example.com</i></p>
+                            </div>
+                        {% else %}
+                            {% block help %}{% endblock %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% block app_content %}{% endblock %}
+        </div>
+{% endblock %}
+
+{% block scripts %}{% endblock %}

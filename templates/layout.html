@@ -1,0 +1,40 @@
+<html>
+    <!-- head -->
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="Anastasia Ilyina">
+ 
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/base-template.css') }}">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css"/>
+        <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.3/css/responsive.dataTables.min.css"/>
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.5.3/css/buttons.dataTables.min.css"/>
+        {% block head %}{% endblock %}
+    </head>
+    <body>
+        <!-- navbar -->
+        {% block navbar %}{% endblock %}
+        <!-- body -->
+        {% block body %}{% endblock %}
+        <!-- scripts -->
+        <script type="text/javascript" src={{ url_for('static',filename='js/jquery-3.3.1.min.js') }}></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+        <script type="text/javascript" src={{ url_for('static',filename='js/datatables/datatables.min.js') }}></script>
+        
+        <script src="https://cdn.datatables.net/buttons/1.5.3/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.5.3/js/buttons.html5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.5.3/js/buttons.print.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.2.3/js/responsive.dataTables.min.js"></script>
+        
+        <script src={{ url_for('static',filename='js/datatable-edit.js') }}></script>
+        <script src={{ url_for('static',filename='js/tables/tables.js') }}></script>
+        {% block scripts %}{% endblock %}
+    </body>
+</html>

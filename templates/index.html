@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block help %}
+<div class="card-body text-dark">
+    <h5 class="card-title"><b>Начать работу</b></h5>
+    <p class="card-text">Для начала работы выберите предмет, курс и группу на форме вверху страницы и нажмите "Показать таблицу".</p>
+    <h5 class="card-title"><b>Редактирование</b></h5>
+    <p class="card-text">Вы можете редактировать содержимое ячеек с оценками. Для этого дважды нажмите на ячейку. Содержимое ячеки не должно быть длиннее 10 символов.</p>
+    <h5 class="card-title"><b>Удаление</b></h5>
+    <p class="card-text">Выберите одну или несколько непустых ячеек щелчком мыши, затем нажмите на кнопку удаления в верхнем левом углу таблицы.</p>
+    <h5 class="card-title"><b>Экспорт</b></h5>
+    <p class="card-text">Таблица может быть экспортирована в форматы <i>csv</i>, <i>xlsx</i> и <i>pdf</i>. Для экспорта в желаемый формат нажмите на соответствующую кнопку в верхнем левом углу таблицы.</p> 
+</div>
+{% endblock %}
+
+{% block app_content %}
+    {% if current_user.is_student() %}
+        <table id="grades" class="table table-striped table-bordered">
+            <caption>Курс: {{ current_user.student.year }}, семестр: {{ current_term }}</caption>
+            <thead>
+                <tr>
+                    <th scope="col" rowspan="2" id="subject_name">Предмет</th>
+                    <th scope="col" colspan="3" id="attestation">Аттестация</th>
+                    <th scope="col" rowspan="2" id="4">Экзамен/зачёт</th>
+                </tr>
+                <tr>
+                    <th id="1">1</th>
+                    <th id="2">2</th>
+                    <th id="3">3</th>
+                </tr>
+            </thead>
+        </table>
+    {% else %}
+        {% if current_user.is_admin() %}
+            <div class="card" style="max-width: 63rem;">
+                <div class="card-body">
+                    <form id="formGrades" class="form-inline" novalidate>
+                        <label for="subject">Предмет</label>
+                        <div class="col">
+                            <select id="subject_id" class="custom-select" required>
+                                <option value ="" selected>Выберите предмет</option>
+                            </select>
+                        </div>
+                        <label for="year">Курс</label>
+                        <div class="col-sm">
+                            <select id="year" class="custom-select" required>
+                                <option value ="" selected>Выберите курс</option>
+                            </select>
+                        </div>
+                        <label for="group">Группа</label>
+                        <div class="col-sm">
+                            <select id="group" class="custom-select" required>
+                                <option value ="" selected>Выберите группу</option>
+                            </select>
+                        </div>
+                        <div class="col-sm">
+                            <button id="submit" type="submit" class="btn btn-danger">Показать таблицу</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <br>
+                    
+            <table id="grades" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th id="student" scope="col" colspan="2">Студент</th>
+                        <th id="attestation" scope="col" colspan="3">Аттестация</th>
+                        <th id="4" scope="col" rowspan="2">Экзамен/зачёт</th>
+                    </tr>
+                    <tr>
+                        <th id="student_id">ID</th>
+                        <th id="student_name">Имя</th>
+                        <th id="1">1</th>
+                        <th id="2">2</th>
+                        <th id="3">3</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th><input type="text" class="form-control input-sm" placeholder="Поиск по ID"/></th>
+                        <th><input type="text" class="form-control input-sm" placeholder="Поиск по имени"/></th>
+                        <th><input type="text" class="form-control input-sm" placeholder="Поиск по оценке"/></th>
+                        <th><input type="text" class="form-control input-sm" placeholder="Поиск по оценке"/></th>
+                        <th><input type="text" class="form-control input-sm" placeholder="Поиск по оценке"/></th>
+                        <th><input type="text" class="form-control input-sm" placeholder="Поиск по оценке"/></th>
+                    </tr>
+                </tfoot>
+            </table>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {% if current_user.is_student() %}
+        <!--<script type="text/javascript" src={{ url_for('static',filename='js/tables/grades-no-edit.js') }}></script>
+		-->
+		<script type="text/javascript">
+		$(document).ready( function () {
+			var grades = $('#grades').DataTable({
+				responsive: true,
+				paging: true,
+				pageLength: -1,
+				ajax: {
+					url: "{{ url_for('student_grades_ajax') }}",
+					type: 'POST',
+					dataType: "json",
+					dataSrc: "data",
+					contentType: "application/json"
+				},
+				columns: [
+					{ "data": "subject_name" },
+					{ 
+						"data": "1", 
+						"defaultContent": ""
+					},
+					{ 
+						"data": "2", 
+						"defaultContent": ""
+					},
+					{ 
+						"data": "3", 
+						"defaultContent": ""
+					},
+					{ 
+						"data": "4", 
+						"defaultContent": ""
+					}
+				],
+				dom: "<'row'<'col-sm-12 col-md-6'B><'col-sm-12 col-md-6'f>>" +
+						"<'row'<'col-sm-12'tr>>" +
+						"<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"+
+						"<'row'<'col-sm-12 col-md-5'l>>",
+				buttons: [
+					'csv', 'excel', 'pdf',
+					],
+				scrollY: '100vh',
+				scrollCollapse: true,
+				lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Все"]],
+				language: {
+					"decimal":        ",",
+					"emptyTable":     "Таблица пуста",
+					"info":           "Запись с _START_ по _END_ из _TOTAL_",
+					"infoEmpty":      "Запись с 0 по 0 из 0",
+					"infoFiltered":   "(найдено из _MAX_ записей)",
+					"infoPostFix":    "",
+					"thousands":      " ",
+					"lengthMenu":     "Показывать _MENU_ записей",
+					"loadingRecords": "Загрузка...",
+					"processing":     "Идёт обработка...",
+					"search":         "Поиск:",
+					"zeroRecords":    "Ничего не найдено",
+					"paginate": {
+						"first":      "Первая",
+						"last":       "Последняя",
+						"next":       "Следующая",
+						"previous":   "Предыдущая"
+					},
+					"aria": {
+						"sortAscending":  ": активировать для сортировки по возрастанию",
+						"sortDescending": ": активировать для сортировки по убыванию"
+					}
+				}
+			});
+		});
+		</script>
+	{% else %}
+        {% if current_user.is_admin() %}
+            <!--<script type="text/javascript" src={{ url_for('static',filename='js/tables/grades.js') }}></script>
+			-->
+		<script type="text/javascript">
+		$(document).ready( function () {
+			var subject_id = null;
+			//Validate form selectors
+			function formValidation() {
+				var form = document.getElementById('formGrades');
+				form.addEventListener('submit', function(event) {
+					event.preventDefault();
+					if (form.checkValidity() === false) {
+						event.stopPropagation();
+					} else {
+						grades.ajax.reload();
+						grades.columns.adjust().draw();
+						subject_id = $('#subject_id')[0][$('#subject_id')[0].selectedIndex].value;
+					}
+					form.classList.add('was-validated');
+				}, false);
+			}
+			//Populate subject select in form
+			function subjectSelect() {
+				$.ajax({
+						type: "POST",
+						url: "{{ url_for('subjects_ajax') }}",
+						success: function(response){
+							var opts = response['data'];
+							$.each(opts, function(i, subject) {
+								$('#subject_id').append('<option value="' + subject.id + '">' + subject.name + '</option>');
+							});
+						}
+					});
+			}
+			//Populate group select in form
+			function groupSelect() {
+				$.ajax({
+						type: "POST",
+						url: "{{ url_for('groups_ajax') }}",
+						success: function(response){
+							var opts = response['data'];
+							$.each(opts, function(i, x) {
+								$('#group').append('<option value="' + x['group'] + '">' + x['group'] + '</option>');
+							});
+						}
+					});
+			}
+			//Populate year select in form
+			function yearSelect() {
+				$.ajax({
+						type: "POST",
+						url: "{{ url_for('years_ajax') }}",
+						success: function(response){
+							var opts = response['data'];
+							$.each(opts, function(i, x) {
+								$('#year').append('<option value="' + x['year'] + '">' + x['year'] + '</option>');
+							});
+						}
+					});
+			}
+			
+			var grades = $('#grades').DataTable({
+				responsive: true,
+				processing: true,
+				ajax: {
+					url: "{{ url_for('grades_ajax') }}",
+					type: 'POST',
+					dataType: "json",
+					dataSrc: "data",
+					contentType: "application/json",
+					data: function () {
+						data = {};
+						$('#formGrades select').each(function() {
+							if (!this[this.selectedIndex].value) { 
+								data = {};
+								return; 
+							}
+							data[this.id] = this[this.selectedIndex].value;
+						});
+						return JSON.stringify(data);
+					}
+				},
+				sPaginationType: "full_numbers",
+				columns: [
+					{ "data": "student_id" },
+					{ "data": "student_name" },
+					{ 
+						"data": "1", 
+						"defaultContent": ""
+					},
+					{ 
+						"data": "2", 
+						"defaultContent": ""
+					},
+					{ 
+						"data": "3", 
+						"defaultContent": ""
+					},
+					{ 
+						"data": "4", 
+						"defaultContent": ""
+					}
+				],
+				dom: "<'row'<'col-sm-12 col-md-6'B><'col-sm-12 col-md-6'f>>" +
+						"<'row'<'col-sm-12'tr>>" +
+						"<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"+
+						"<'row'<'col-sm-12 col-md-5'l>>",
+				buttons: [
+					{
+						text: '<i class="fas fa-trash-alt">',
+						className: 'delete',
+						titleAttr: 'Ctrl+D Удалить оценки',
+						key: {
+							key: 'd',
+							ctrlKey: true
+						}
+					},
+					'csv', 'excel', 'pdf',
+					],
+				scrollY: '100vh',
+				scrollCollapse: true,
+				lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Все"]],
+				language: {
+					"decimal":        ",",
+					"emptyTable":     "Таблица пуста",
+					"info":           "Запись с _START_ по _END_ из _TOTAL_",
+					"infoEmpty":      "Запись с 0 по 0 из 0",
+					"infoFiltered":   "(найдено из _MAX_ записей)",
+					"infoPostFix":    "",
+					"thousands":      " ",
+					"lengthMenu":     "Показывать _MENU_ записей",
+					"loadingRecords": "Загрузка...",
+					"processing":     "Идёт обработка...",
+					"search":         "Поиск:",
+					"zeroRecords":    "Ничего не найдено",
+					"paginate": {
+						"first":      "Первая",
+						"last":       "Последняя",
+						"next":       "Следующая",
+						"previous":   "Предыдущая"
+					},
+					"aria": {
+						"sortAscending":  ": активировать для сортировки по возрастанию",
+						"sortDescending": ": активировать для сортировки по убыванию"
+					}
+				}
+			});
+			
+			subjectSelect();
+			groupSelect();
+			yearSelect();
+			formValidation();
+			
+			TableEdit(grades, {
+				editType: "cell",
+				editedColumns: "2, 3, 4, 5",
+				$deleteButton: $('.delete'),
+				onEdit: function(row, cell, columnIndex) {
+					data = getRowData(grades, row);
+					data['subject_id'] = subject_id;
+					data['stage'] = grades.column(columnIndex).header()['id'];
+					$.ajax({
+						type: 'POST',
+						url: "{{ url_for('edit_grade') }}",
+						contentType : 'application/json',
+						data: JSON.stringify(data),
+						dataType: 'json',
+						error: function(err) {
+							bootbox.alert('Произошла непредвиденная ошибка во время текущей операции. Проверьте корректность введенных данных.');
+						}
+					});
+				},
+				onDelete: function(cells) {
+					var data = []
+					$(cells).each(function() {
+						var grade = {}
+						grade['subject_id'] = subject_id;
+						grade['student_id'] = grades.row(this['row']).data()['student_id'];
+						grade['stage'] = grades.column(this['column']).header()['id'];
+						data.push(grade);
+					});
+					$.ajax({
+						type: 'POST',
+						url: "{{ url_for('delete_grades') }}",
+						contentType : 'application/json',
+						data: JSON.stringify(data),
+						dataType: 'json',
+						success: function(response) {
+							grades.ajax.reload();
+						},
+						error: function(err) {
+							bootbox.alert('Произошла непредвиденная ошибка во время текущей операции.');
+						}
+					});
+				}
+			});
+		});
+		</script>
+		{% endif %}
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block help %}
+<div class="card-body text-dark">
+    <h5 class="card-title"><b>Добавление</b></h5>
+    <p class="card-text">Чтобы добавить студента, нажмите на кнопку создания ряда в верхнем левом углу таблицы. При добавлении студента также автоматически создается пользователь с именем и паролем, равными ID студента.</p>
+    <h5 class="card-title"><b>Редактирование</b></h5>
+    <p class="card-text">Вы можете редактировать содержимое рядов. Для этого дважды нажмите на ряд. Содержимое ячеки с именем студента не должно быть длиннее 64 символов, с номером группы - не длинне 10 символов. Курс должен быть представлен числом.</p>
+    <h5 class="card-title"><b>Удаление</b></h5>
+    <p class="card-text">Выберите один или несколько рядов щелчком мыши, затем нажмите на кнопку удаления в верхнем левом углу таблицы.</p>
+    <h5 class="card-title"><b>Экспорт</b></h5>
+    <p class="card-text">Таблица может быть экспортирована в форматы <i>csv</i>, <i>xlsx</i> и <i>pdf</i>. Для экспорта в желаемый формат нажмите на соответствующую кнопку в верхнем левом углу таблицы.</p> 
+</div>
+{% endblock %}
+
+{% block app_content %}
+    <table id="students" class="display">
+	<thead>
+	    <tr>
+		<th scope="col" id="id">ID</th>
+		<th scope="col" id="name">Имя</th>
+		<th scope="col" id="year">Курс</th>
+		<th scope="col" id="group">Группа</th>
+	    </tr>
+	</thead>
+	    <tfoot>
+		<tr>
+		    <th><input class="form-control input-sm" type="text" placeholder="Поиск по ID"/></th>
+		    <th><input class="form-control input-sm" type="text" placeholder="Поиск по имени"/></th>
+		    <th><input class="form-control input-sm" type="text" placeholder="Поиск по курсу"/></th>
+		    <th><input class="form-control input-sm" type="text" placeholder="Поиск по группе"/></th>
+		</tr>
+	    </tfoot>
+    </table>
+{% endblock %}
+
+{% block scripts %}
+    <!--<script type="text/javascript" src={{ url_for('static',filename='js/tables/students.js') }}></script>
+	-->
+	<script type="text/javascript">
+	// table enablers
+	$(document).ready( function () {
+		var students = $('#students').DataTable({
+			responsive: true,
+			processing: true,
+			ajax: {
+				url: "{{ url_for('students_ajax') }}",
+				type: 'POST',
+				dataType: "json",
+				dataSrc: "data",
+				contentType: "application/json"
+			},
+			sPaginationType: "full_numbers",
+			columns: [
+				{ "data": "id" },
+				{ "data": "name" },
+				{ "data": "year" },
+				{ "data": "group" }
+			],
+			dom: "<'row'<'col-sm-12 col-md-6'B><'col-sm-12 col-md-6'f>>" +
+					"<'row'<'col-sm-12'tr>>" +
+					"<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"+
+					"<'row'<'col-sm-12 col-md-5'l>>",
+			buttons: [
+				{
+					text: '<i class="fas fa-plus"></i>',
+					className: 'add',
+					titleAttr: 'Ctrl+A Добавить студента',
+					key: {
+						key: 'a',
+						ctrlKey: true
+					}
+				},
+				{
+					text: '<i class="fas fa-trash-alt">',
+					className: 'delete',
+					titleAttr: 'Ctrl+D Удалить студентов',
+					key: {
+						key: 'd',
+						ctrlKey: true
+					}
+				},
+				'csv', 'excel', 'pdf',
+				],
+			scrollY: '100vh',
+			scrollCollapse: true,
+			lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Все"]],
+			language: {
+				"decimal":        ",",
+				"emptyTable":     "Таблица пуста",
+				"info":           "Запись с _START_ по _END_ из _TOTAL_",
+				"infoEmpty":      "Запись с 0 по 0 из 0",
+				"infoFiltered":   "(найдено из _MAX_ записей)",
+				"infoPostFix":    "",
+				"thousands":      " ",
+				"lengthMenu":     "Показывать _MENU_ записей",
+				"loadingRecords": "Загрузка...",
+				"processing":     "Идёт обработка...",
+				"search":         "Поиск:",
+				"zeroRecords":    "Ничего не найдено",
+				"paginate": {
+					"first":      "Первая",
+					"last":       "Последняя",
+					"next":       "Следующая",
+					"previous":   "Предыдущая"
+				},
+				"aria": {
+					"sortAscending":  ": активировать для сортировки по возрастанию",
+					"sortDescending": ": активировать для сортировки по убыванию"
+				}
+			}
+		});
+		
+		TableEdit(students, {
+			editedColumns: "1, 2, 3",
+			$addButton: $('.add'),
+			$deleteButton: $('.delete'),
+			onAdd: function() {
+				$.ajax({
+					type: 'POST',
+					url: "{{ url_for('add_student') }}",
+					contentType : 'application/json',
+					dataType: 'json',
+					success: function(response) {
+						students.row.add({
+							"id": response["id"],
+							"name": "",
+							"year": "",
+							"group": ""
+							}).draw()
+					},
+					error: function(err) {
+						bootbox.alert('Произошла непредвиденная ошибка во время текущей операции.');
+					}
+				});
+			},
+			onEdit: function(row, cell, columnIndex) {
+				data = getRowData(students, row);
+				$.ajax({
+					type: 'POST',
+					url: "{{ url_for('edit_student') }}",
+					contentType : 'application/json',
+					data: JSON.stringify(data),
+					dataType: 'json',
+					error: function(err) {
+						bootbox.alert('Произошла непредвиденная ошибка во время текущей операции. Проверьте корректность введенных данных.');
+					}
+				});
+			},
+			onDelete: function(rows) {
+				var ids = [];
+				students.rows('.selected').every(function() {
+					ids.push(this.data()['id']);
+				});
+				/* Doesn't work for some reason - gets the same id
+				$(rows).each(function() {
+					ids.push(students.row(this).data()['id']);
+				});
+				*/
+				$.ajax({
+					type: 'POST',
+					url: "{{ url_for('delete_students') }}",
+					contentType : 'application/json',
+					data: JSON.stringify({ 'ids': ids }),
+					dataType: 'json',
+					error: function(err) {
+						bootbox.alert('Произошла непредвиденная ошибка во время текущей операции.');
+					}
+				});
+			}
+		});
+	});
+	</script>
+{% endblock %}
