@@ -92,7 +92,7 @@ def subjects_get():
 @app.route('/api/subjects', methods=['POST'])
 @login_required
 def subjects_add():
-    new_subject = Subject(name="", year=None, term="")
+    new_subject = Subject()
     db.session.add(new_subject)
     db.session.commit()
     return jsonify(status="success", id=new_subject.id)
@@ -125,7 +125,7 @@ def subjects_delete():
 
 @app.route('/api/students', methods=['GET'])
 @login_required
-def students_ajax():
+def students_get():
     students_all = Student.query.all()
     data = [{
         'id': student.id,
@@ -140,7 +140,7 @@ def students_ajax():
 @app.route('/api/students', methods=['POST'])
 @login_required
 def student_add():
-    new_student = Student(name='', year=None, group='')
+    new_student = Student()
     db.session.add(new_student)
     db.session.commit()
     user = User(username=new_student.id)
