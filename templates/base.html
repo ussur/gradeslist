@@ -2,15 +2,15 @@
     
 {% block head %}
     {% if title %}
-        <title>{{title}} - Оценки ФКН</title>
+        <title>{{title}} - Оценки</title>
     {% else %}
-        <title>Оценки ФКН</title>
+        <title>Оценки</title>
     {% endif %}
 {% endblock %}
 
 {% block navbar %}
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="{{ url_for('index') }}">Оценки ФКН</a>
+        <a class="navbar-brand" href="{{ url_for('index') }}">Оценки</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#gradeslistNav" aria-controls="gradeslistNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>

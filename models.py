@@ -1,6 +1,7 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -65,7 +66,8 @@ class Student(db.Model):
     def get_grades(self, subject_id):
         grades = [grade for grade in self.grades if grade.subject_id == subject_id]
         return grades
-        
+
+
 class Subject(db.Model):
     __tablename__ = 'subjects'
     id = db.Column(db.Integer, primary_key=True)
@@ -82,7 +84,8 @@ class Grade(db.Model):
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)
     stage = db.Column(db.Integer, nullable=False)
     value = db.Column(db.String(10), nullable=False)   
-    
+
+
 def increment_year():
     students = Student.query.all()
     for student in students:

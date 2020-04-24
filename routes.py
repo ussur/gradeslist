@@ -15,6 +15,7 @@ def login_required(func):
             return func(*args, **kwargs)
     return wrapper
 
+
 @app.route('/')
 @app.route('/index')
 @login_required
@@ -24,10 +25,11 @@ def index():
     if current_user is not None and current_user.is_student():
         grades = current_user.student.grades
     return render_template("index.html",
-        title = 'Главная',
-        grades = grades,
-        current_term = app.config['CURRENT_TERM'],
-        current_user=current_user)
+                           title='Главная',
+                           grades=grades,
+                           current_term=app.config['CURRENT_TERM'],
+                           current_user=current_user)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -47,90 +49,97 @@ def login():
         return redirect(next_page)  
     return render_template('login.html', title='Вход')
 
+
 @app.route('/logout')
 @login_required
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('index'))
 
+
 @app.route('/subjects', methods=['GET', 'POST'])
 @login_required
 def subjects():
     current_user = User.query.filter_by(id=session['user_id']).first()
     return render_template("subjects.html",
-        title = 'Предметы',
-        current_user=current_user)
+                           title='Предметы',
+                           current_user=current_user)
+
 
 @app.route('/students', methods=['GET', 'POST'])
 @login_required
-def students(): 
+def students():
     current_user = User.query.filter_by(id=session['user_id']).first()
     return render_template("students.html",
-        title = 'Предметы',
-        current_user=current_user)
+                           title='Предметы',
+                           current_user=current_user)
 
-@app.route('/subjects_ajax', methods=['POST'])
+
+@app.route('/api/subjects', methods=['GET'])
 @login_required
-def subjects_ajax():
-    subjects = Subject.query.all()  
+def subjects_get():
+    subjects_all = Subject.query.all()
     data = [{
         'id': subject.id,
         'name': subject.name,
         'year': subject.year,
         'term': subject.term
-        } for subject in subjects
+        } for subject in subjects_all
     ]
     return jsonify({'data': data})
 
-@app.route('/add_subject', methods=['POST'])
+
+@app.route('/api/subjects', methods=['POST'])
 @login_required
-def add_subject():
-    new_subject = Subject(name='', year=None, term='')
+def subjects_add():
+    new_subject = Subject(name="", year=None, term="")
     db.session.add(new_subject)
     db.session.commit()
-    return jsonify(status="success", id=new_subject.id)  
+    return jsonify(status="success", id=new_subject.id)
 
-@app.route('/edit_subject', methods=['POST'])
+
+@app.route('/api/subjects', methods=['PUT'])
 @login_required
-def edit_subject():
+def subjects_update():
     data = request.get_json()
     subject = Subject.query.filter_by(id=data['id']).first_or_404()
     subject.name = data['name'].strip()
     subject.year = data['year'].strip()
     subject.term = data['term'].strip()
     db.session.commit()
-    return jsonify(status="success", data=data) 
+    return jsonify(status="success", data=data)
 
-@app.route('/delete_subjects', methods=['POST'])
+
+@app.route('/api/subjects', methods=['DELETE'])
 @login_required
-def delete_subjects():
+def subjects_delete():
     ids = request.get_json()['ids']
-    data=[]
     for id in ids:
         subject = Subject.query.filter_by(id=id).first_or_404()
         for grade in subject.grades:
             db.session.delete(grade)
         db.session.delete(subject)
-        data.append(id)
     db.session.commit()
-    return jsonify(status="success", data=data, ids=ids)
+    return jsonify(status="success")
 
-@app.route('/students_ajax', methods=['POST'])
+
+@app.route('/api/students', methods=['GET'])
 @login_required
 def students_ajax():
-    students = Student.query.all()  
+    students_all = Student.query.all()
     data = [{
         'id': student.id,
         'name': student.name,
         'year': student.year,
         'group': student.group
-        } for student in students
+        } for student in students_all
     ]
     return jsonify({'data': data})     
 
-@app.route('/add_student', methods=['POST'])
+
+@app.route('/api/students', methods=['POST'])
 @login_required
-def add_student():
+def student_add():
     new_student = Student(name='', year=None, group='')
     db.session.add(new_student)
     db.session.commit()
@@ -146,26 +155,22 @@ def add_student():
     db.session.commit()
     return jsonify(status="success", id=new_student.id)  
 
-@app.route('/edit_student', methods=['POST'])
+
+@app.route('/api/students', methods=['PUT'])
 @login_required
-def edit_student():
+def student_update():
     data = request.get_json()
     student = Student.query.filter_by(id=data['id']).first_or_404()
     student.name = data['name'].strip()
     student.year = data['year'].strip()
     student.group = data['group'].strip()
     db.session.commit()
-    return jsonify(status="success", data=data) 
+    return jsonify(status="success", data=data)
 
-@app.route('/student_validate', methods=['POST'])
-@login_required
-def student_validate():
-    id = request.get_json()['id']
-    return jsonify(status="success") 
 
-@app.route('/delete_students', methods=['POST'])
+@app.route('/api/students', methods=['DELETE'])
 @login_required
-def delete_students():
+def students_delete():
     ids = request.get_json()['ids']
     for id in ids:
         student = Student.query.filter_by(id=id).first_or_404()
@@ -175,45 +180,48 @@ def delete_students():
             db.session.delete(grade)
         db.session.delete(student)
     db.session.commit()
-    return jsonify(status="success")  
+    return jsonify(status="success")
 
-@app.route('/grades_ajax', methods=['POST'])
+
+@app.route('/api/grades', methods=['POST'])
 @login_required
-def grades_ajax():
-    selects = request.get_json()
-    if not selects:
+def grades_get():
+    params = request.get_json()
+    if not params:
         return jsonify({'data': []})
-    students = Student.query.filter_by(year=selects['year'], group=selects['group']) 
-    data = [] 
-    for student in students:
-        student_data = {}
-        student_data['student_id'] = student.id
-        student_data['student_name'] = student.name
-        for grade in student.get_grades(int(selects['subject_id'])):
+    students_filtered = Student.query.filter_by(year=params['year'],
+                                                group=params['group'])
+    data = []
+    for student in students_filtered:
+        student_data = {
+            'student_id': student.id,
+            'student_name': student.name
+        }
+        for grade in student.get_grades(int(params['subject_id'])):
             student_data[str(grade.stage)] = grade.value
         data.append(student_data)
     return jsonify({'data': data})
 
 
-@app.route('/student_grades_ajax', methods=['POST'])
+@app.route('/api/grades/current', methods=['GET'])
 @login_required
-def student_grades_ajax():
+def grades_get_current():
     data = []
     current_user = User.query.filter_by(id=session['user_id']).first()
     student = current_user.student
     #subjects = Subject.query.filter_by(year=student.year, term=str(app.config['CURRENT_TERM']))
-    subjects = Subject.query.filter_by(year=student.year)
-    for subject in subjects:
-        subject_grades = {}
-        subject_grades['subject_name'] = subject.name
+    subjects_filtered = Subject.query.filter_by(year=student.year)
+    for subject in subjects_filtered:
+        subject_grades = {'subject_name': subject.name}
         for grade in student.get_grades(subject.id):
             subject_grades[str(grade.stage)] = grade.value
         data.append(subject_grades)
     return jsonify({'data': data})
 
-@app.route('/edit_grade', methods=['POST'])
+
+@app.route('/api/grades', methods=['PUT'])
 @login_required
-def edit_grade():
+def grade_update():
     data = request.get_json()
     subject_id = data['subject_id']
     student_id = data['student_id']
@@ -233,9 +241,10 @@ def edit_grade():
     db.session.commit()
     return jsonify(status="success") 
 
-@app.route('/delete_grades', methods=['POST'])
+
+@app.route('/api/grades', methods=['DELETE'])
 @login_required
-def delete_grades():
+def grades_delete():
     data = request.get_json()
     for item in data:
         subject_id = item['subject_id']
@@ -245,17 +254,17 @@ def delete_grades():
         db.session.delete(grade)
     db.session.commit()
     return jsonify(status="success", data=data) 
-    
-@app.route('/groups_ajax', methods=['POST'])
+
+
+@app.route('/api/groups', methods=['GET'])
 @login_required
-def groups_ajax():
+def groups_get():
     groups = db.session.query(Student.group).distinct()
-    data = [group for group in groups]
-    return jsonify({'data': sorted(data)})
-    
-@app.route('/years_ajax', methods=['POST'])
+    return jsonify({'data': sorted(groups)})
+
+
+@app.route('/api/years', methods=['GET'])
 @login_required
-def years_ajax():
+def years_get():
     years = db.session.query(Student.year).distinct()
-    data = [year for year in years]
-    return jsonify({'data': sorted(data)})
+    return jsonify({'data': sorted(years)})

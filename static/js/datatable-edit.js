@@ -1,7 +1,3 @@
-/*
-@description  A JS library which adds edit functionality to dataTables. Requires Bootstrap4.
-@autor Anastasia Ilyina
-*/
 "use strict";
 //Global variables
 var table = null;
@@ -17,18 +13,19 @@ var buttons = '<div id="buttons" class="btn-group">'+
     '</button>'+
     '</div>';
 
-function TableEdit(datatable, options) {
+
+function TableEdit(dataTable, options) {
     var defaults = {
         editType: "row",
-        editedColumns: null,         //Index to editable columns. If null all td editables. Ex.: "1,2,3,4,5"
-        $addButton: null,        //Jquery object of "Add" button
-        $deleteButton: null,        //Jquery object of "remove" button
-        onEdit: function() {},   //Called after edition
-        onDelete: function() {}, //Called after deletion
-        onAdd: function() {}     //Called when added a new row
+        editableColumns: null,        // Indices of editable columns. If null all columns are editable. Ex.: "1,2,3,4,5"
+        $addButton: null,           // Jquery object of an "Add" button
+        $deleteButton: null,        // Jquery object of a "Delete" button
+        onEdit: function() {},      // Called after edition
+        onDelete: function() {},    // Called after deletion
+        onAdd: function() {}        // Called when a new row is added
     };
     params = $.extend(defaults, options);
-	table = datatable;
+	table = dataTable;
     //Click handler
     $(document).click(function(e) {
         if ($(e.target).closest('td').length > 0 && !inEdit) {
@@ -42,7 +39,7 @@ function TableEdit(datatable, options) {
             if (params.editType === "cell") {
                 var clickedCell = $(e.target).closest('td');
                 var idx = table.cell(clickedCell).index().column;
-                if (params.editedColumns.includes(idx) &&
+                if (params.editableColumns.includes(idx) &&
                     clickedCell.text() !== "")
                     $(clickedCell).toggleClass('selected');
                 return;
@@ -116,10 +113,10 @@ function mapEditableCells(func) {
     
     function isEditable(idx) {
     //Check if cell is editable by index
-        if (params.editedColumns == null) {  //editedColumns is not defined - all cells are editable
+        if (params.editableColumns == null) {  //editableColumns is not defined - all cells are editable
             return true;
         } else {
-            if (params.editedColumns.includes(idx)) return true;
+            if (params.editableColumns.includes(idx)) return true;
             else return false;
         }
     }
